@@ -4,7 +4,8 @@ from typing import assert_type
 
 def find_highest_n_digits(line: str, remaining_digits: int, start: int = 0) -> str:
     """
-    Find the highest remaining_digits-digit number from line[start:] while keeping order.
+    Naive recursive solution: Find the highest remaining_digits-digit number from line[start:] while keeping order.
+    Time complexity: O(n²), Space complexity: O(remaining_digits) for recursion
     Ensures we never run out of digits to choose from.
     """
     if remaining_digits == 0:
@@ -35,6 +36,37 @@ def find_highest_n_digits(line: str, remaining_digits: int, start: int = 0) -> s
     return str(highest_digit) + find_highest_n_digits(line, remaining_digits - 1, highest_index + 1)
 
 
+def find_highest_n_digits_optimal(line: str, n: int) -> str:
+    """
+    Optimal solution using monotonic stack/greedy approach.
+    Time complexity: O(len(line)), Space complexity: O(n)
+
+    Algorithm:
+    1. Use a stack to build the result
+    2. For each digit, remove smaller digits from stack if we can afford to (have digits to spare)
+    3. This ensures we always keep the largest possible digit at each position
+    """
+    stack = []
+    digits_to_remove = len(line) - n
+
+    for char in line:
+        if char.isdigit():
+            # Remove smaller digits from stack if we can afford to
+            while stack and digits_to_remove > 0 and stack[-1] < char:
+                stack.pop()
+                digits_to_remove -= 1
+            stack.append(char)
+
+    # If we still need to remove digits (all remaining are in descending order),
+    # remove from the end
+    while digits_to_remove > 0:
+        stack.pop()
+        digits_to_remove -= 1
+
+    # Return exactly n digits
+    return ''.join(stack[:n])
+
+
 def part1(lines: list[str]) -> int:
     res = 0
     for line in lines:
@@ -52,6 +84,13 @@ def part2(lines: list[str]) -> int:
             res += int(highest_12_digit)
     return res
 
+def part2optimal(lines: list[str]) -> int:
+    res = 0
+    for line in lines:
+        highest_12_digit = find_highest_n_digits_optimal(line, 12)
+        if highest_12_digit:
+            res += int(highest_12_digit)
+    return res
 
 if sys.stdin.isatty():
     input_file = open('example.txt', 'r')
@@ -62,7 +101,9 @@ lines = [line.strip() for line in input_file]
 res = 0
 
 
-res1 = part1(lines)
+# res1 = part1(lines)
 res2 = part2(lines)
-print(f"Final result part 1: {res1}")
+# res3 = part2optimal(lines)
+# print(f"Final result part 1: {res1}")
 print(f"Final result part 2: {res2}")
+# print(f"Final result part 2 optimal: {res3}")
